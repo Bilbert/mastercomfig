@@ -3,23 +3,30 @@
 BINDIR=$(dirname "$(readlink -fn "$0")")
 cd "$BINDIR"
 
-source mastercomfig-vars
+. ./mastercomfig-vars
 
 # Announce on Discord #releases
 
 curl -X POST -H 'Content-type: application/json' \
- --data "{\"content\":\"@everyone **$1** released with $2\n\nhttps://github.com/mastercoms/tf2cfg/releases/tag/$1\"}" \
+ --data "{\"content\":\"@everyone **[$1](https://mastercomfig.com/download)** released with $2.\n\n[Changelog](https://github.com/mastercoms/mastercomfig/releases/tag/$1)\"}" \
  $DISCORD_WEBHOOK
 
-# TODO: Announce on TeamFortress.TV
+# TODO: Announce on teamfortress.tv and Steam Group
 
-post_body="[b][url=https://github.com/mastercoms/tf2cfg/releases/tag/$1]$1[/url] released with $2[/b]"
-formatted_body=${post_body// /+}
+post_body="[url=https://mastercomfig.com/download]$1[/url] released with $2.\n\n[url=https://github.com/mastercoms/mastercomfig/releases/tag/$1]Changelog[/url]\n"
 
-#curl -X POST -H 'Content-type: application/x-www-form-urlencoded' \
-#  -F "body=$formatted_body" -F 'thread_id=42867' -F "token=$TFTV_TOKEN" \
-#  http://www.teamfortress.tv/post/add
+printf "\n"
 
-echo $post_body
+echo "BBCode announcement for tf.tv and Steam Group:"
+printf "$post_body"
+
+printf "\n"
+
+plain_text="$1 released with $2.\n\nDownload: https://mastercomfig.com/download\n\nChangelog: https://github.com/mastercoms/mastercomfig/releases/tag/$1"
+
+printf "\n"
+
+echo "Plain text (for Steam Chat):"
+printf "$plain_text"
 
 printf "\n"

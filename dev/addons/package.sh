@@ -7,13 +7,19 @@ cd "$BINDIR"
 rm *.vpk -f
 rm */ -rf
 
-# Create addons
-declare -a addons=("badcpu" "badgpu" "stripped" "transparent_viewmodels")
+# Create .cfg addons
+declare -a addons=("badcpu" "badgpu" "slowio" "lowmem" "transparent-viewmodels" "no-tutorial" "flat-mouse")
 
 for A in "${addons[@]}"; do
     mkdir -p mastercomfig-"${A}"-addon/cfg/addons
-    cp -f ../../mastercomfig/cfg/addons/"${A}".cfg mastercomfig-"${A}"-addon/cfg/addons/"${A}".cfg
+    cp -f ../../config/cfg/addons/"${A}".cfg mastercomfig-"${A}"-addon/cfg/addons/"${A}".cfg
 done
+
+find . -name "*.cfg" | xargs sed -i '/^[[:blank:]]*\/\//d;s/\/\/.*//'
+find . -name "*.cfg" | xargs sed -i '/^[[:space:]]*$/d'
+
+# Copy over custom addons
+cp -rf ../../config/addons/* .
 
 # Package into VPK
 for D in *; do

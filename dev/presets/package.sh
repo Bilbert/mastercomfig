@@ -7,37 +7,50 @@ cd "$BINDIR"
 rm *.vpk -f
 rm */ -rf
 
-# Create folders
-
-# Create default
-mkdir -p mastercomfig-default/cfg
-touch mastercomfig-default/cfg/autoexec.cfg
-echo -e "exec comfig\r\nexec addons/badcpu\r\nexec addons/badgpu\r\nexec addons/stripped\r\nexec custom\r\n" > mastercomfig-default/cfg/autoexec.cfg
-
 # Create presets
-declare -a presets=("comp" "compquality" "maxperformance" "maxquality" "midquality")
+declare -a presets=("very-low" "low" "medium-low" "medium" "medium-high" "high" "ultra")
 
 for P in "${presets[@]}"; do
-    mkdir -p mastercomfig-"${P}"/cfg/presets
-    cp -f ../../mastercomfig/cfg/presets/"${P}".cfg mastercomfig-"${P}"/cfg/presets/"${P}".cfg
-    touch mastercomfig-"${P}"/cfg/autoexec.cfg
-    echo -e "exec comfig\r\nexec presets/${P}\r\nexec addons/badcpu\r\nexec addons/badgpu\r\nexec addons/stripped\r\nexec custom\r\n" > mastercomfig-"${P}"/cfg/autoexec.cfg
+    mkdir -p mastercomfig-"${P}"-preset/cfg/presets
+    cp -f ../../config/cfg/presets/"${P}".cfg mastercomfig-"${P}"-preset/cfg/presets/"${P}".cfg
+    preset_file=mastercomfig-"${P}"-preset/cfg/presets/${P}.cfg
+    sed -i '/^[[:blank:]]*\/\//d;s/\/\/.*//' $preset_file
+    autoexec_file=mastercomfig-"${P}"-preset/cfg/autoexec.cfg
+    touch $autoexec_file
+    echo "exec comfig/comfig" > $autoexec_file
+    echo "exec comfig/select_modules" >> $autoexec_file
+    echo "exec presets/${P}" >> $autoexec_file
+    echo "exec comfig/addons" >> $autoexec_file
+    echo "exec user/modules" >> $autoexec_file
+    echo "exec modules.log" >> $autoexec_file
+    echo "run_modules" >> $autoexec_file
+    echo "exec user/autoexec" >> $autoexec_file
+    echo "exec comfig/finalize" >> $autoexec_file
 done
 
 # Fill folders with common files
 for D in *; do
     if [ -d "${D}" ]; then
-        cp -f ../../mastercomfig/cfg/comfig.cfg "${D}"/cfg/comfig.cfg
-        cp -f ../../mastercomfig/cfg/listenserver.cfg "${D}"/cfg/listenserver.cfg
-        cp -f ../../mastercomfig/dxsupport_override.cfg "${D}"/dxsupport_override.cfg
-        cp -f ../../mastercomfig/texture_preload_list.txt "${D}"/texture_preload_list.txt
-        vpk "${D}"
+        cp -rf ../../config/mastercomfig/* "${D}"/
+        rm -f "${D}"/cfg/server.cfg
     fi
 done
 
-# Overwrite common files
-cp -f ../../01-mastercomfig_dx_maxperformance/dxsupport_override.cfg mastercomfig-maxperformance/dxsupport_override.cfg
-cp -f ../../01-mastercomfig_dx_maxquality/dxsupport_override.cfg mastercomfig-maxquality/dxsupport_override.cfg
+find . -name "*.cfg" | xargs sed -i '/^[[:blank:]]*\/\//d;s/\/\/.*//'
+find . -name "*.cfg" | xargs sed -i '/^[[:space:]]*$/d'
+
+declare -a overriden_presets=("low" "very-low" "ultra")
+declare -a override_combos=("low" "low" "ultra")
+
+# Preset specific overrides
+for ((i=0; i<${#overriden_presets[*]}; i++));
+do
+    folder="mastercomfig-${overriden_presets[i]}-preset/"
+    for override in ${override_combos[i]}
+    do
+        cp -rf "../../config/overrides/$override/"* $folder
+    done
+done
 
 # Package into VPK
 for D in *; do
